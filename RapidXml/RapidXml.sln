@@ -5,22 +5,48 @@ VisualStudioVersion = 14.0.25123.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "RapidXml", "RapidXml.vcxproj", "{BCE0FCF3-6384-45B2-B293-12730A515DBC}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "RapidXmlAndroid", "Android\RapidXmlAndroid.vcxproj", "{4B2FD206-89D7-42C2-BCAE-A4BA31EA299A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|ARM = Debug|ARM
+		Debug|ARM64 = Debug|ARM64
 		Debug|x64 = Debug|x64
 		Debug|x86 = Debug|x86
+		Release|ARM = Release|ARM
+		Release|ARM64 = Release|ARM64
 		Release|x64 = Release|x64
 		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{BCE0FCF3-6384-45B2-B293-12730A515DBC}.Debug|ARM.ActiveCfg = Debug|Win32
+		{BCE0FCF3-6384-45B2-B293-12730A515DBC}.Debug|ARM64.ActiveCfg = Debug|Win32
 		{BCE0FCF3-6384-45B2-B293-12730A515DBC}.Debug|x64.ActiveCfg = Debug|x64
 		{BCE0FCF3-6384-45B2-B293-12730A515DBC}.Debug|x64.Build.0 = Debug|x64
 		{BCE0FCF3-6384-45B2-B293-12730A515DBC}.Debug|x86.ActiveCfg = Debug|Win32
 		{BCE0FCF3-6384-45B2-B293-12730A515DBC}.Debug|x86.Build.0 = Debug|Win32
+		{BCE0FCF3-6384-45B2-B293-12730A515DBC}.Release|ARM.ActiveCfg = Release|Win32
+		{BCE0FCF3-6384-45B2-B293-12730A515DBC}.Release|ARM64.ActiveCfg = Release|Win32
 		{BCE0FCF3-6384-45B2-B293-12730A515DBC}.Release|x64.ActiveCfg = Release|x64
 		{BCE0FCF3-6384-45B2-B293-12730A515DBC}.Release|x64.Build.0 = Release|x64
 		{BCE0FCF3-6384-45B2-B293-12730A515DBC}.Release|x86.ActiveCfg = Release|Win32
 		{BCE0FCF3-6384-45B2-B293-12730A515DBC}.Release|x86.Build.0 = Release|Win32
+		{4B2FD206-89D7-42C2-BCAE-A4BA31EA299A}.Debug|ARM.ActiveCfg = Debug|ARM
+		{4B2FD206-89D7-42C2-BCAE-A4BA31EA299A}.Debug|ARM.Build.0 = Debug|ARM
+		{4B2FD206-89D7-42C2-BCAE-A4BA31EA299A}.Debug|ARM64.ActiveCfg = Debug|ARM64
+		{4B2FD206-89D7-42C2-BCAE-A4BA31EA299A}.Debug|ARM64.Build.0 = Debug|ARM64
+		{4B2FD206-89D7-42C2-BCAE-A4BA31EA299A}.Debug|x64.ActiveCfg = Debug|x64
+		{4B2FD206-89D7-42C2-BCAE-A4BA31EA299A}.Debug|x64.Build.0 = Debug|x64
+		{4B2FD206-89D7-42C2-BCAE-A4BA31EA299A}.Debug|x86.ActiveCfg = Debug|x86
+		{4B2FD206-89D7-42C2-BCAE-A4BA31EA299A}.Debug|x86.Build.0 = Debug|x86
+		{4B2FD206-89D7-42C2-BCAE-A4BA31EA299A}.Release|ARM.ActiveCfg = Release|ARM
+		{4B2FD206-89D7-42C2-BCAE-A4BA31EA299A}.Release|ARM.Build.0 = Release|ARM
+		{4B2FD206-89D7-42C2-BCAE-A4BA31EA299A}.Release|ARM64.ActiveCfg = Release|ARM64
+		{4B2FD206-89D7-42C2-BCAE-A4BA31EA299A}.Release|ARM64.Build.0 = Release|ARM64
+		{4B2FD206-89D7-42C2-BCAE-A4BA31EA299A}.Release|x64.ActiveCfg = Release|x64
+		{4B2FD206-89D7-42C2-BCAE-A4BA31EA299A}.Release|x64.Build.0 = Release|x64
+		{4B2FD206-89D7-42C2-BCAE-A4BA31EA299A}.Release|x86.ActiveCfg = Release|x86
+		{4B2FD206-89D7-42C2-BCAE-A4BA31EA299A}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

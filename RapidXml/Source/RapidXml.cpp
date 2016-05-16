@@ -117,7 +117,7 @@ extern "C"
 #ifdef _MSC_VER
         return _stricmp(Value, "true") == 0;
 #else
-        return stricmp(Value, "true") == 0;
+        return strcasecmp(Value, "true") == 0;
 #endif
     }
 
@@ -440,7 +440,7 @@ extern "C"
 #ifdef _MSC_VER
         return _stricmp(InAttrPtr->value(), "true") == 0;
 #else
-        return stricmp(InAttrPtr->value(), "true") == 0;
+        return strcasecmp(InAttrPtr->value(), "true") == 0;
 #endif
     }
 
