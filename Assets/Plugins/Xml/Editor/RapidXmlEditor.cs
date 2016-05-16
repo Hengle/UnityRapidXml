@@ -1,4 +1,5 @@
-﻿// Tests editor
+﻿#if UNITY_EDITOR
+// Tests editor
 using UnityEngine;
 using UnityEditor;
 
@@ -39,3 +40,4 @@ namespace RapidXml
 
 }
 
+#endif
