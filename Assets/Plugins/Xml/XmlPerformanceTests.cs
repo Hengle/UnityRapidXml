@@ -35,8 +35,8 @@ public class XmlPerformanceTests : MonoBehaviour
 
     void Update()
     {
-     //   TestParse();
-        TestVisit();
+       // TestParse();
+         TestVisit();
     }
 
     void TestParse()
@@ -51,33 +51,42 @@ public class XmlPerformanceTests : MonoBehaviour
 
     void TestParse_Rapid()
     {
+        Profiler.BeginSample("Rapid");
         using (RapidXmlParser xml = new RapidXmlParser())
         {
             xml.Load(XmlContent);
 
 
         }
+        Profiler.EndSample();
     }
 
     void TestParse_System()
     {
+        Profiler.BeginSample("System");
+
         XmlDocument xml = new XmlDocument();
 
         xml.LoadXml(XmlContent);
 
+        Profiler.EndSample();
 
     }
 
     void TestParse_Mono()
     {
+        Profiler.BeginSample("Mono");
+
         SecurityParser xml = new SecurityParser();
 
         xml.LoadXml(XmlContent);
+
+        Profiler.EndSample();
     }
 
     void TestVisit()
     {
-        for( int i=0; i<100; ++i )
+        for( int i=0; i<10000; ++i )
         {
             TestVisit_Rapid();
             TestVisit_System();
@@ -87,6 +96,8 @@ public class XmlPerformanceTests : MonoBehaviour
 
     void TestVisit_Rapid()
     {
+        Profiler.BeginSample("RapidVisit");
+
         NodeElement RootNode = xmlRapid.FirstNode();
 
         NodeElement Node = RootNode.FirstNode();
@@ -97,10 +108,12 @@ public class XmlPerformanceTests : MonoBehaviour
 
             Node = Node.NextSibling();
         }
+        Profiler.EndSample();
     }
 
     void TestVisit_System()
     {
+        Profiler.BeginSample("SystemVisit");
         XmlNode RootElement = xmlSystem.ChildNodes[0];
         var Iter = RootElement.GetEnumerator();
         while( Iter.MoveNext() )
@@ -108,15 +121,19 @@ public class XmlPerformanceTests : MonoBehaviour
             XmlNode Node = Iter.Current as XmlNode;
          //   Debug.Log("System " + Node.Name);
         }
+        Profiler.EndSample();
     }
 
     void TestVisit_Mono()
     {
-        for( int i=0; i< xmlMono.ToXml().Children.Count; ++i )
+        Profiler.BeginSample("MonoVisit");
+
+        for ( int i=0; i< xmlMono.ToXml().Children.Count; ++i )
         {
             SecurityElement Node = xmlMono.ToXml().Children[i] as SecurityElement;
 
          //   Debug.Log("Mono " + Node.Tag);
         }
+        Profiler.EndSample();
     }
 }
