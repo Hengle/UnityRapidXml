@@ -89,14 +89,14 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>./Source</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>./;./Source</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy $(TargetPath) $(SolutionDir)..\Project\Assets\Plugins\X86\ /y </Command>
+      <Command>xcopy $(TargetPath) $(SolutionDir)..\Assets\Plugins\X86\ /y </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -107,14 +107,14 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>./Source</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>./;./Source</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy $(TargetPath) $(SolutionDir)..\Project\Assets\Plugins\X86\ /y </Command>
+      <Command>xcopy $(TargetPath) $(SolutionDir)..\Assets\Plugins\X86\ /y </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -127,7 +127,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>./Source</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>./;./Source</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -136,7 +136,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy $(TargetPath) $(SolutionDir)..\Project\Assets\Plugins\X86\ /y </Command>
+      <Command>xcopy $(TargetPath) $(SolutionDir)..\Assets\Plugins\X86\ /y </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -149,7 +149,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>./Source</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>./;./Source</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -158,11 +158,12 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy $(TargetPath) $(SolutionDir)..\Project\Assets\Plugins\X86\ /y </Command>
+      <Command>xcopy $(TargetPath) $(SolutionDir)..\Assets\Plugins\X86\ /y </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="Source\rapidxml.hpp" />
+    <ClInclude Include="Source\RapidXmlNative.h" />
     <ClInclude Include="Source\rapidxml_iterators.hpp" />
     <ClInclude Include="Source\rapidxml_print.hpp" />
     <ClInclude Include="Source\rapidxml_utils.hpp" />

@@ -4,338 +4,471 @@ using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Diagnostics;
 
-#if UNITY_EDITOR
-using UnityEngine;
-using UnityEditor;
-#endif
-
-public struct NodeElement
+namespace RapidXml
 {
-    public RapidXml Document;
-    public IntPtr NativeNodePtr;
-
-    public bool IsValid()
+    // Attribute
+    public struct NodeAttribute
     {
-        return Document != null && NativeNodePtr != IntPtr.Zero;
-    }
+        public RapidXmlParser Document;
+        public IntPtr NativeAttrPtr;
 
-    [Conditional("UNITY_EDITOR")]
-    public static void EditorAssert(bool bInCondition)
-    {
-        if(!bInCondition)
+        [Conditional("UNITY_EDITOR")]
+        public static void EditorAssert(bool bInCondition)
         {
-            UnityEngine.Debug.DebugBreak();
+            if (!bInCondition)
+            {
+                UnityEngine.Debug.DebugBreak();
+            }
         }
-    }
 
-    public NodeElement SearchForChildByTag(string InTag)
-    {
-        EditorAssert(IsValid());
+        public bool IsValid()
+        {
+            return Document != null && NativeAttrPtr != IntPtr.Zero;
+        }
 
-        return Document.SearchForChildByTag(NativeNodePtr, InTag);
-    }
-
-    public NodeElement FirstChildNode()
-    {
-        EditorAssert(IsValid());
-
-        return Document.FirstChildNode(NativeNodePtr);
-    }
-
-    public NodeElement NextSibling()
-    {
-        EditorAssert(IsValid());
-
-        return Document.NextSibling(NativeNodePtr);
-    }
-
-    public bool HasAttribute(String InName)
-    {
-        EditorAssert(IsValid());
-
-        return RapidXml.HasAttribute(Document.NativeDocumentPtr, NativeNodePtr, InName);
-    }
-
-    public bool AttributeBool(String InName)
-    {
-        EditorAssert(IsValid());
-
-        return RapidXml.AttributeBool(Document.NativeDocumentPtr, NativeNodePtr, InName);
-    }
-
-    public int AttributeInt(string InName)
-    {
-        EditorAssert(IsValid());
-
-        return RapidXml.AttributeInt(Document.NativeDocumentPtr, NativeNodePtr, InName);
-    }
-
-    public uint AttributeUInt(string InName)
-    {
-        EditorAssert(IsValid());
-
-        return RapidXml.AttributeUInt(Document.NativeDocumentPtr, NativeNodePtr, InName);
-    }
-
-    public float AttributeFloat(String InName)
-    {
-        EditorAssert(IsValid());
-
-        return RapidXml.AttributeFloat(Document.NativeDocumentPtr, NativeNodePtr, InName);
-    }
-
-    public string AttributeString(string InName)
-    {
-        EditorAssert(IsValid());
-
-        return RapidXml.AttributeString(Document.NativeDocumentPtr, NativeNodePtr, InName);
-    }
-
-    public string Attribute(string InName)
-    {
-        EditorAssert(IsValid());
-
-        return RapidXml.AttributeString(Document.NativeDocumentPtr, NativeNodePtr, InName);
-    }
-
-    public string Tag
-    {
-        get
+        public string GetName()
         {
             EditorAssert(IsValid());
 
-            return RapidXml.NodeTag(Document.NativeDocumentPtr, NativeNodePtr);
+            IntPtr Result = RapidXmlParser.GetAttributeNamePtr(Document.NativeDocumentPtr, NativeAttrPtr);
+            return Result != IntPtr.Zero ? Marshal.PtrToStringAnsi(Result) : "";
         }
-    }
 
-    public int Count
-    {
-        get
+        public string GetValue()
         {
             EditorAssert(IsValid());
 
-            return RapidXml.GetChildCount(Document.NativeDocumentPtr, NativeNodePtr);
+            IntPtr Result = RapidXmlParser.GetAttributeValuePtr(Document.NativeDocumentPtr, NativeAttrPtr);
+
+            return Result != IntPtr.Zero ? Marshal.PtrToStringAnsi(Result) : "";
+        }
+
+        public bool GetBool()
+        {
+            EditorAssert(IsValid());
+
+            return RapidXmlParser.GetAttributeValueBool(Document.NativeDocumentPtr, NativeAttrPtr);
+        }
+
+        public int GetInt()
+        {
+            EditorAssert(IsValid());
+
+            return RapidXmlParser.GetAttributeValueInt(Document.NativeDocumentPtr, NativeAttrPtr);
+        }
+
+        public uint GetUInt()
+        {
+            EditorAssert(IsValid());
+
+            return RapidXmlParser.GetAttributeValueUInt(Document.NativeDocumentPtr, NativeAttrPtr);
+        }
+
+        public Int64 GetInt64()
+        {
+            EditorAssert(IsValid());
+
+            return RapidXmlParser.GetAttributeValueInt64(Document.NativeDocumentPtr, NativeAttrPtr);
+        }
+
+        public UInt64 GetUInt64()
+        {
+            EditorAssert(IsValid());
+
+            return RapidXmlParser.GetAttributeValueUInt(Document.NativeDocumentPtr, NativeAttrPtr);
+        }
+
+        public float GetFloat()
+        {
+            EditorAssert(IsValid());
+
+            return RapidXmlParser.GetAttributeValueFloat(Document.NativeDocumentPtr, NativeAttrPtr);
+        }
+
+        public double GetDouble()
+        {
+            EditorAssert(IsValid());
+
+            return RapidXmlParser.GetAttributeValueDouble(Document.NativeDocumentPtr, NativeAttrPtr);
+        }
+
+        public NodeAttribute NextAttribute(string InName = "")
+        {
+            EditorAssert(IsValid());
+
+            NodeAttribute Attr = new NodeAttribute();
+            Attr.Document = this.Document;
+            Attr.NativeAttrPtr = RapidXmlParser.NextAttributePtr(Document.NativeDocumentPtr, NativeAttrPtr, InName);
+
+            return Attr;
         }
     }
-}
 
-public class RapidXml : IDisposable    
-{
-    public const string PluginName = "RapidXml";
-
-    public IntPtr NativeDocumentPtr = IntPtr.Zero;
-
-    public void Load(string InContent)
+    public struct NodeElement
     {
-        NativeDocumentPtr = LoadFromString(InContent);
+        public RapidXmlParser Document;
+        public IntPtr NativeNodePtr;
 
-        if( NativeDocumentPtr == IntPtr.Zero )
+        [Conditional("UNITY_EDITOR")]
+        public static void EditorAssert(bool bInCondition)
         {
-            // load error
-            string ErrorMessage = Marshal.PtrToStringAnsi(GetLastLoadError());             
-
-            throw new Exception(ErrorMessage);
-        }
-    }
-
-    public void Dispose()
-    {
-        if(NativeDocumentPtr!=IntPtr.Zero)
-        {
-            DisposeThis(NativeDocumentPtr);
-            NativeDocumentPtr = IntPtr.Zero;
-        }
-    }
-
-    public NodeElement SelectSingleNode(string InName)
-    {
-        NodeElement Element = new NodeElement();
-
-        Element.Document = this;
-        Element.NativeNodePtr = SelectSingleNodePtr(NativeDocumentPtr, InName);
-
-        return Element;
-    }
-
-    public NodeElement SearchForChildByTag(IntPtr InPtr, string InTag)
-    {
-        NodeElement Element = new NodeElement();
-        Element.Document = this;
-        Element.NativeNodePtr = SearchForChildByTagPtr(NativeDocumentPtr, InPtr, InTag);
-
-        return Element;
-    }
-
-    public NodeElement FirstChildNode(IntPtr InPtr)
-    {
-        NodeElement Element = new NodeElement();
-        Element.Document = this;
-        Element.NativeNodePtr = FirstChildNodePtr(NativeDocumentPtr, InPtr);
-
-        return Element;
-    }
-
-    public NodeElement NextSibling(IntPtr InPtr)
-    {
-        NodeElement Element = new NodeElement();
-        Element.Document = this;
-        Element.NativeNodePtr = NextSiblingPtr(NativeDocumentPtr, InPtr);
-
-        return Element;
-    }
-
-    public static string AttributeString(IntPtr InDocument, IntPtr InNativePtr, String InName)
-    {
-        IntPtr Result = AttributeStringPtr(InDocument, InNativePtr, InName);
-        return Result != IntPtr.Zero?Marshal.PtrToStringAnsi(Result):""; 
-    }
-    
-    public static string NodeTag(IntPtr InDocument, IntPtr InNativePtr)
-    {
-        IntPtr Result = NodeTagPtr(InDocument, InNativePtr);
-        return Result != IntPtr.Zero ? Marshal.PtrToStringAnsi(Result) : "";
-    }
-
-#if UNITY_IPHONE && !UNITY_EDITOR
-    [DllImport("__Internal")]
-#else
-    [DllImport(PluginName, CallingConvention = CallingConvention.Cdecl)]
-#endif
-    private static extern IntPtr LoadFromString([MarshalAs(UnmanagedType.LPStr)]string InContent);
-
-#if UNITY_IPHONE && !UNITY_EDITOR
-    [DllImport("__Internal")]
-#else
-    [DllImport(PluginName, CallingConvention = CallingConvention.Cdecl)]
-#endif
-    private static extern IntPtr GetLastLoadError();
-
-#if UNITY_IPHONE && !UNITY_EDITOR
-    [DllImport("__Internal")]
-#else
-    [DllImport(PluginName, CallingConvention = CallingConvention.Cdecl)]
-#endif
-    private static extern void DisposeThis(IntPtr InDocument);
-
-#if UNITY_IPHONE && !UNITY_EDITOR
-    [DllImport("__Internal")]
-#else
-    [DllImport(PluginName, CallingConvention = CallingConvention.Cdecl)]
-#endif
-    private static extern IntPtr SelectSingleNodePtr(IntPtr InDocument, [MarshalAs(UnmanagedType.LPStr)]string InName);
-
-#if UNITY_IPHONE && !UNITY_EDITOR
-    [DllImport("__Internal")]
-#else
-    [DllImport(PluginName, CallingConvention = CallingConvention.Cdecl)]
-#endif
-    private static extern IntPtr SearchForChildByTagPtr(IntPtr InDocument, IntPtr InElementPtr, [MarshalAs(UnmanagedType.LPStr)]string InTag);
-
-#if UNITY_IPHONE && !UNITY_EDITOR
-    [DllImport("__Internal")]
-#else
-    [DllImport(PluginName, CallingConvention = CallingConvention.Cdecl)]
-#endif
-    public static extern bool HasAttribute(IntPtr InDocument, IntPtr InNativePtr, String InName);
-
-#if UNITY_IPHONE && !UNITY_EDITOR
-    [DllImport("__Internal")]
-#else
-    [DllImport(PluginName, CallingConvention = CallingConvention.Cdecl)]
-#endif
-    public static extern bool AttributeBool(IntPtr InDocument, IntPtr InNativePtr, String InName);
-
-#if UNITY_IPHONE && !UNITY_EDITOR
-    [DllImport("__Internal")]
-#else
-    [DllImport(PluginName, CallingConvention = CallingConvention.Cdecl)]
-#endif
-    public static extern int AttributeInt(IntPtr InDocument, IntPtr InNativePtr, String InName);
-
-#if UNITY_IPHONE && !UNITY_EDITOR
-    [DllImport("__Internal")]
-#else
-    [DllImport(PluginName, CallingConvention = CallingConvention.Cdecl)]
-#endif
-    public static extern uint AttributeUInt(IntPtr InDocument, IntPtr InNativePtr, String InName);
-
-#if UNITY_IPHONE && !UNITY_EDITOR
-    [DllImport("__Internal")]
-#else
-    [DllImport(PluginName, CallingConvention = CallingConvention.Cdecl)]
-#endif
-    public static extern float AttributeFloat(IntPtr InDocument, IntPtr InNativePtr, String InName);
-
-#if UNITY_IPHONE && !UNITY_EDITOR
-    [DllImport("__Internal")]
-#else
-    [DllImport(PluginName, CallingConvention = CallingConvention.Cdecl)]
-#endif
-    private static extern IntPtr AttributeStringPtr(IntPtr InDocument, IntPtr InNativePtr, String InName);
-
-#if UNITY_IPHONE && !UNITY_EDITOR
-    [DllImport("__Internal")]
-#else
-    [DllImport(PluginName, CallingConvention = CallingConvention.Cdecl)]
-#endif
-    private static extern IntPtr FirstChildNodePtr(IntPtr InDocument, IntPtr InNativePtr);
-
-#if UNITY_IPHONE && !UNITY_EDITOR
-    [DllImport("__Internal")]
-#else
-    [DllImport(PluginName, CallingConvention = CallingConvention.Cdecl)]
-#endif
-    private static extern IntPtr NextSiblingPtr(IntPtr InDocument, IntPtr InNativePtr);
-
-#if UNITY_IPHONE && !UNITY_EDITOR
-    [DllImport("__Internal")]
-#else
-    [DllImport(PluginName, CallingConvention = CallingConvention.Cdecl)]
-#endif
-    private static extern IntPtr NodeTagPtr(IntPtr InDocument, IntPtr InNativePtr);
-
-#if UNITY_IPHONE && !UNITY_EDITOR
-    [DllImport("__Internal")]
-#else
-    [DllImport(PluginName, CallingConvention = CallingConvention.Cdecl)]
-#endif
-    public static extern int GetChildCount(IntPtr InDocument, IntPtr InNativePtr);
-}
-
-
-#if UNITY_EDITOR
-
-public class RapidXmlTests
-{
-    [MenuItem("SGameTools/测试XML")]
-    static void TestRapidXml()
-    {
-        using (RapidXml xml = new RapidXml())
-        {
-            try
+            if (!bInCondition)
             {
-                string InContent = System.Text.Encoding.UTF8.GetString(System.IO.File.ReadAllBytes(@"G:\hurt.xml"));
-
-                xml.Load(InContent);
-
-                NodeElement projectNode = xml.SelectSingleNode("Project");
-
-                NodeElement.EditorAssert(projectNode.IsValid());
-
-                NodeElement templateObjectListNode = projectNode.SearchForChildByTag("TemplateObjectList");
-                NodeElement actionNode = projectNode.SearchForChildByTag("Action");
-                NodeElement refParamNode = projectNode.SearchForChildByTag("RefParamList");
-
-                NodeElement.EditorAssert(templateObjectListNode.IsValid());
-                NodeElement.EditorAssert(actionNode.IsValid());
-                NodeElement.EditorAssert(refParamNode.IsValid());
-            }
-            catch(Exception e)
-            {
-                UnityEngine.Debug.LogError(e.Message);
+                UnityEngine.Debug.DebugBreak();
             }
         }
+
+        public bool IsValid()
+        {
+            return Document != null && NativeNodePtr != IntPtr.Zero;
+        }
+        
+        public NodeElement FirstNode(string InName = "")
+        {
+            EditorAssert(IsValid());
+
+            NodeElement Element = new NodeElement();
+            Element.Document = Document;
+            Element.NativeNodePtr = RapidXmlParser.FirstNodePtr(Document.NativeDocumentPtr, NativeNodePtr, InName);
+
+            return Element;
+        }
+
+        public NodeElement NextSibling(string InName = "")
+        {
+            EditorAssert(IsValid());
+
+            NodeElement Element = new NodeElement();
+            Element.Document = Document;
+            Element.NativeNodePtr = RapidXmlParser.NextSiblingPtr(Document.NativeDocumentPtr, NativeNodePtr, InName);
+
+            return Element;
+        }
+
+        public NodeAttribute FirstAttribute(string InName= "")
+        {
+            EditorAssert(IsValid());
+
+            NodeAttribute Attr = new NodeAttribute();
+            Attr.Document = this.Document;
+            Attr.NativeAttrPtr = RapidXmlParser.FirstAttributePtr(Document.NativeDocumentPtr, NativeNodePtr, InName);
+
+            return Attr;
+        }
+
+        public bool HasAttribute(String InName)
+        {
+            EditorAssert(IsValid());
+
+            return RapidXmlParser.HasAttribute(Document.NativeDocumentPtr, NativeNodePtr, InName);
+        }
+
+        public bool AttributeBool(String InName)
+        {
+            EditorAssert(IsValid());
+
+            return RapidXmlParser.AttributeBool(Document.NativeDocumentPtr, NativeNodePtr, InName);
+        }
+
+        public int AttributeInt(string InName)
+        {
+            EditorAssert(IsValid());
+
+            return RapidXmlParser.AttributeInt(Document.NativeDocumentPtr, NativeNodePtr, InName);
+        }
+
+        public uint AttributeUInt(string InName)
+        {
+            EditorAssert(IsValid());
+
+            return RapidXmlParser.AttributeUInt(Document.NativeDocumentPtr, NativeNodePtr, InName);
+        }
+
+        public float AttributeFloat(String InName)
+        {
+            EditorAssert(IsValid());
+
+            return RapidXmlParser.AttributeFloat(Document.NativeDocumentPtr, NativeNodePtr, InName);
+        }
+
+        public string AttributeString(string InName)
+        {
+            EditorAssert(IsValid());
+
+            IntPtr Result = RapidXmlParser.AttributeStringPtr(Document.NativeDocumentPtr, NativeNodePtr, InName);
+            return Result != IntPtr.Zero ? Marshal.PtrToStringAnsi(Result) : "";
+        }
+
+        // the same with AttributeString
+        // created for compatible
+        public string Attribute(string InName)
+        {
+            EditorAssert(IsValid());
+
+            IntPtr Result = RapidXmlParser.AttributeStringPtr(Document.NativeDocumentPtr, NativeNodePtr, InName);
+            return Result != IntPtr.Zero ? Marshal.PtrToStringAnsi(Result) : "";
+        }
+
+        public string GetName()
+        {
+            EditorAssert(IsValid());
+
+            IntPtr Result = RapidXmlParser.GetNodeTagPtr(Document.NativeDocumentPtr, NativeNodePtr);
+            return Result != IntPtr.Zero ? Marshal.PtrToStringAnsi(Result) : "";
+        }
+
+        public int GetChildNodeCount()
+        {
+            EditorAssert(IsValid());
+
+            return RapidXmlParser.GetChildNodeCount(Document.NativeDocumentPtr, NativeNodePtr);
+        }
+
+        public int GetAttributeCount()
+        {
+            EditorAssert(IsValid());
+
+            return RapidXmlParser.GetAttributeCount(Document.NativeDocumentPtr, NativeNodePtr);
+        }
+    }
+
+    public class RapidXmlParser : IDisposable
+    {
+        public const string PluginName = "RapidXml";
+
+        public IntPtr NativeDocumentPtr = IntPtr.Zero;
+
+        public void Load(string InContent)
+        {
+            NativeDocumentPtr = LoadFromString(InContent);
+
+            string ErrorMessage = Marshal.PtrToStringAnsi(GetLastErrorMessage(NativeDocumentPtr));
+
+            if (!string.IsNullOrEmpty(ErrorMessage))
+            {
+                throw new Exception(ErrorMessage);
+            }
+        }
+
+        public void Dispose()
+        {
+            if (NativeDocumentPtr != IntPtr.Zero)
+            {
+                DisposeThis(NativeDocumentPtr);
+                NativeDocumentPtr = IntPtr.Zero;
+            }
+        }
+
+        public NodeElement FirstNode(string InName = null)
+        {
+            NodeElement Element = new NodeElement();
+            Element.Document = this;
+            Element.NativeNodePtr = FirstNodePtr(NativeDocumentPtr, IntPtr.Zero, InName);
+
+            return Element;
+        }
+
+        //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        // internal use
+        //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////        
+        
+#if UNITY_IPHONE && !UNITY_EDITOR
+        [DllImport("__Internal")]
+#else
+        [DllImport(PluginName, CallingConvention = CallingConvention.Cdecl)]
+#endif
+        private static extern IntPtr LoadFromString([MarshalAs(UnmanagedType.LPStr)]string InContent);
+
+#if UNITY_IPHONE && !UNITY_EDITOR
+        [DllImport("__Internal")]
+#else
+        [DllImport(PluginName, CallingConvention = CallingConvention.Cdecl)]
+#endif
+        private static extern IntPtr GetLastErrorMessage(IntPtr InDocumentNativePtr);
+
+#if UNITY_IPHONE && !UNITY_EDITOR
+        [DllImport("__Internal")]
+#else
+        [DllImport(PluginName, CallingConvention = CallingConvention.Cdecl)]
+#endif
+        private static extern void DisposeThis(IntPtr InDocumentNativePtr);
+
+
+#if UNITY_IPHONE && !UNITY_EDITOR
+        [DllImport("__Internal")]
+#else
+        [DllImport(PluginName, CallingConvention = CallingConvention.Cdecl)]
+#endif
+        internal static extern IntPtr FirstAttributePtr(IntPtr InDocumentNativePtr, IntPtr InNodeNativePtr, [MarshalAs(UnmanagedType.LPStr)]String InName);
+
+#if UNITY_IPHONE && !UNITY_EDITOR
+        [DllImport("__Internal")]
+#else
+        [DllImport(PluginName, CallingConvention = CallingConvention.Cdecl)]
+#endif
+        internal static extern IntPtr NextAttributePtr(IntPtr InDocumentNativePtr, IntPtr InAttrPtr, [MarshalAs(UnmanagedType.LPStr)]String InName);
+
+#if UNITY_IPHONE && !UNITY_EDITOR
+        [DllImport("__Internal")]
+#else
+        [DllImport(PluginName, CallingConvention = CallingConvention.Cdecl)]
+#endif
+        internal static extern bool HasAttribute(IntPtr InDocumentNativePtr, IntPtr InNodeNativePtr, [MarshalAs(UnmanagedType.LPStr)]String InName);
+
+#if UNITY_IPHONE && !UNITY_EDITOR
+        [DllImport("__Internal")]
+#else
+        [DllImport(PluginName, CallingConvention = CallingConvention.Cdecl)]
+#endif
+        internal static extern bool AttributeBool(IntPtr InDocumentNativePtr, IntPtr InNodeNativePtr, [MarshalAs(UnmanagedType.LPStr)]String InName);
+
+#if UNITY_IPHONE && !UNITY_EDITOR
+        [DllImport("__Internal")]
+#else
+        [DllImport(PluginName, CallingConvention = CallingConvention.Cdecl)]
+#endif
+        internal static extern int AttributeInt(IntPtr InDocumentNativePtr, IntPtr InNodeNativePtr, [MarshalAs(UnmanagedType.LPStr)]String InName);
+
+#if UNITY_IPHONE && !UNITY_EDITOR
+        [DllImport("__Internal")]
+#else
+        [DllImport(PluginName, CallingConvention = CallingConvention.Cdecl)]
+#endif
+        internal static extern uint AttributeUInt(IntPtr InDocumentNativePtr, IntPtr InNodeNativePtr, [MarshalAs(UnmanagedType.LPStr)]String InName);
+
+#if UNITY_IPHONE && !UNITY_EDITOR
+        [DllImport("__Internal")]
+#else
+        [DllImport(PluginName, CallingConvention = CallingConvention.Cdecl)]
+#endif
+        internal static extern Int64 AttributeInt64(IntPtr InDocumentNativePtr, IntPtr InNodeNativePtr, [MarshalAs(UnmanagedType.LPStr)]String InName);
+
+#if UNITY_IPHONE && !UNITY_EDITOR
+        [DllImport("__Internal")]
+#else
+        [DllImport(PluginName, CallingConvention = CallingConvention.Cdecl)]
+#endif
+        internal static extern UInt64 AttributeUInt64(IntPtr InDocumentNativePtr, IntPtr InNodeNativePtr, [MarshalAs(UnmanagedType.LPStr)]String InName);
+
+#if UNITY_IPHONE && !UNITY_EDITOR
+        [DllImport("__Internal")]
+#else
+        [DllImport(PluginName, CallingConvention = CallingConvention.Cdecl)]
+#endif
+        internal static extern float AttributeFloat(IntPtr InDocumentNativePtr, IntPtr InNodeNativePtr, [MarshalAs(UnmanagedType.LPStr)]String InName);
+
+#if UNITY_IPHONE && !UNITY_EDITOR
+        [DllImport("__Internal")]
+#else
+        [DllImport(PluginName, CallingConvention = CallingConvention.Cdecl)]
+#endif
+        internal static extern double AttributeDouble(IntPtr InDocumentNativePtr, IntPtr InNodeNativePtr, [MarshalAs(UnmanagedType.LPStr)]String InName);
+
+#if UNITY_IPHONE && !UNITY_EDITOR
+        [DllImport("__Internal")]
+#else
+        [DllImport(PluginName, CallingConvention = CallingConvention.Cdecl)]
+#endif
+        internal static extern IntPtr AttributeStringPtr(IntPtr InDocumentNativePtr, IntPtr InNodeNativePtr, [MarshalAs(UnmanagedType.LPStr)]String InName);
+
+#if UNITY_IPHONE && !UNITY_EDITOR
+        [DllImport("__Internal")]
+#else
+        [DllImport(PluginName, CallingConvention = CallingConvention.Cdecl)]
+#endif
+        internal static extern IntPtr FirstNodePtr(IntPtr InDocumentNativePtr, IntPtr InNodeNativePtr, [MarshalAs(UnmanagedType.LPStr)]String InName);
+
+#if UNITY_IPHONE && !UNITY_EDITOR
+        [DllImport("__Internal")]
+#else
+        [DllImport(PluginName, CallingConvention = CallingConvention.Cdecl)]
+#endif
+        internal static extern IntPtr NextSiblingPtr(IntPtr InDocumentNativePtr, IntPtr InNodeNativePtr, [MarshalAs(UnmanagedType.LPStr)]String InName);
+
+#if UNITY_IPHONE && !UNITY_EDITOR
+        [DllImport("__Internal")]
+#else
+        [DllImport(PluginName, CallingConvention = CallingConvention.Cdecl)]
+#endif
+        internal static extern IntPtr GetNodeTagPtr(IntPtr InDocumentNativePtr, IntPtr InNodeNativePtr);
+
+#if UNITY_IPHONE && !UNITY_EDITOR
+        [DllImport("__Internal")]
+#else
+        [DllImport(PluginName, CallingConvention = CallingConvention.Cdecl)]
+#endif
+        internal static extern int GetChildNodeCount(IntPtr InDocumentNativePtr, IntPtr InNodeNativePtr);
+
+#if UNITY_IPHONE && !UNITY_EDITOR
+        [DllImport("__Internal")]
+#else
+        [DllImport(PluginName, CallingConvention = CallingConvention.Cdecl)]
+#endif
+        internal static extern int GetAttributeCount(IntPtr InDocumentNativePtr, IntPtr InNodeNativePtr);
+
+#if UNITY_IPHONE && !UNITY_EDITOR
+        [DllImport("__Internal")]
+#else
+        [DllImport(PluginName, CallingConvention = CallingConvention.Cdecl)]
+#endif
+        internal static extern IntPtr GetAttributeNamePtr(IntPtr InDocumentNativePtr, IntPtr InNodeNativePtr);
+
+#if UNITY_IPHONE && !UNITY_EDITOR
+        [DllImport("__Internal")]
+#else
+        [DllImport(PluginName, CallingConvention = CallingConvention.Cdecl)]
+#endif
+        internal static extern IntPtr GetAttributeValuePtr(IntPtr InDocumentNativePtr, IntPtr InNodeNativePtr);
+
+#if UNITY_IPHONE && !UNITY_EDITOR
+        [DllImport("__Internal")]
+#else
+        [DllImport(PluginName, CallingConvention = CallingConvention.Cdecl)]
+#endif
+        internal static extern bool GetAttributeValueBool(IntPtr InDocumentNativePtr, IntPtr InNodeNativePtr);
+
+#if UNITY_IPHONE && !UNITY_EDITOR
+        [DllImport("__Internal")]
+#else
+        [DllImport(PluginName, CallingConvention = CallingConvention.Cdecl)]
+#endif
+        internal static extern int GetAttributeValueInt(IntPtr InDocumentNativePtr, IntPtr InNodeNativePtr);
+
+#if UNITY_IPHONE && !UNITY_EDITOR
+        [DllImport("__Internal")]
+#else
+        [DllImport(PluginName, CallingConvention = CallingConvention.Cdecl)]
+#endif
+        internal static extern uint GetAttributeValueUInt(IntPtr InDocumentNativePtr, IntPtr InNodeNativePtr);
+
+#if UNITY_IPHONE && !UNITY_EDITOR
+        [DllImport("__Internal")]
+#else
+        [DllImport(PluginName, CallingConvention = CallingConvention.Cdecl)]
+#endif
+        internal static extern int GetAttributeValueInt64(IntPtr InDocumentNativePtr, IntPtr InNodeNativePtr);
+
+#if UNITY_IPHONE && !UNITY_EDITOR
+        [DllImport("__Internal")]
+#else
+        [DllImport(PluginName, CallingConvention = CallingConvention.Cdecl)]
+#endif
+        internal static extern uint GetAttributeValueUInt64(IntPtr InDocumentNativePtr, IntPtr InNodeNativePtr);
+
+#if UNITY_IPHONE && !UNITY_EDITOR
+        [DllImport("__Internal")]
+#else
+        [DllImport(PluginName, CallingConvention = CallingConvention.Cdecl)]
+#endif
+        internal static extern float GetAttributeValueFloat(IntPtr InDocumentNativePtr, IntPtr InNodeNativePtr);
+
+
+#if UNITY_IPHONE && !UNITY_EDITOR
+        [DllImport("__Internal")]
+#else
+        [DllImport(PluginName, CallingConvention = CallingConvention.Cdecl)]
+#endif
+        internal static extern double GetAttributeValueDouble(IntPtr InDocumentNativePtr, IntPtr InNodeNativePtr);
     }
 }
 
-#endif

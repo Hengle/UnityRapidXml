@@ -1,127 +1,85 @@
 //
 // export for dll wrapper
 //
-#include "rapidxml.hpp"
-#include <string>
-#include <assert.h>
-
-#if defined(WIN32) || defined(_WIN32)
-#define EXPORT_API __declspec(dllexport)
-#else
-#define EXPORT_API   
-#endif
-
-rapidxml::xml_document<>* GThisDocument = NULL;
-std::string GDocumentContent;
-std::string GLastErrorMessage = "";
+#include "RapidXmlNative.h"
 
 extern "C"
 {
     EXPORT_API void* LoadFromString(const char* pInContent)
     {
-        if (!pInContent)
-        {
-            GLastErrorMessage = "内容为空";
-            // 
-            return NULL;
-        }
+        RapidXmlNative* Native = new RapidXmlNative(pInContent);
 
-        if (GThisDocument)
-        {
-            GLastErrorMessage = "之前的加载并未正确释放!";
-            return NULL;
-        }
+        Native->Parse();
 
-        GThisDocument = new rapidxml::xml_document<>();
-
-        // rapid xml需要自己保存内存
-        GDocumentContent = pInContent;
-
-        try
-        {
-            GThisDocument->parse<0>((char*)GDocumentContent.c_str());
-        }
-        catch (std::exception& e)
-        {
-            GLastErrorMessage = e.what();
-            delete GThisDocument;
-
-            return NULL;
-        }        
-
-        return GThisDocument;
+        return Native;
     }
 
-    EXPORT_API char* GetLastLoadError()
+    EXPORT_API const char* GetLastErrorMessage(void* InDocument)
     {
-        return (char*)GLastErrorMessage.c_str();
+        assert(InDocument);
+
+        RapidXmlNative* Native = (RapidXmlNative*)InDocument;
+
+        return Native->GetLastErrorMessage().c_str();
     }
 
-    EXPORT_API void DisposeThis(void* InPtr)
+    EXPORT_API void DisposeThis(void* InDocument)
     {
-        assert(InPtr == (void*)GThisDocument);
+        assert(InDocument);
 
-        if (GThisDocument == InPtr && GThisDocument)
+        if (InDocument)
         {
-            delete GThisDocument;
-            GThisDocument = NULL;
+            RapidXmlNative* Native = (RapidXmlNative*)InDocument;
+            delete Native;
         }
     }
 
-    EXPORT_API void* SelectSingleNodePtr(void* InDocument, const char* pName)
+    EXPORT_API void* FirstAttributePtr(RapidXmlNative* InDocument, rapidxml::xml_node<>* InNodePtr, const char* pName)
     {
-        assert(InDocument == GThisDocument);
+        assert(InDocument && InNodePtr);
 
-        if (!InDocument || !pName || InDocument != GThisDocument)
+        if (!InNodePtr)
         {
             return NULL;
         }
 
-        rapidxml::xml_node<>* ThisNode = GThisDocument->first_node(pName);
-
-        return ThisNode;
+        return pName && pName[0] != 0 ? InNodePtr->first_attribute(pName) : InNodePtr->first_attribute();
     }
 
-    EXPORT_API void* SearchForChildByTagPtr(void* InDocument, void* InNodePtr, const char* pTag)
+    EXPORT_API void* NextAttributePtr(RapidXmlNative* InDocument, rapidxml::xml_attribute<>* InAttrPtr, const char* pName)
     {
-        assert(InDocument && InNodePtr && pTag && InDocument == GThisDocument);
+        assert(InDocument && InAttrPtr);
 
-        if (!InDocument || !InNodePtr || !pTag || InDocument != GThisDocument)
+        if (!InAttrPtr)
         {
             return NULL;
         }
 
-        rapidxml::xml_node<>* ThisNode = (rapidxml::xml_node<>*)InNodePtr;
-
-        return ThisNode->first_node(pTag);
+        return pName && pName[0] != 0 ? InAttrPtr->next_attribute(pName) : InAttrPtr->next_attribute();
     }
 
-    EXPORT_API bool HasAttribute(void* InDocument, void* InNodePtr, const char* pInName)
+    EXPORT_API bool HasAttribute(RapidXmlNative* InDocument, rapidxml::xml_node<>* InNodePtr, const char* pName)
     {
-        assert(InDocument && InNodePtr && pInName && InDocument == GThisDocument);
+        assert(InDocument && InNodePtr && pName);
 
-        if (!InDocument || !InNodePtr || !pInName || InDocument != GThisDocument)
+        if (!InDocument || !InNodePtr || !pName)
+        {
+            return false;
+        }
+        
+        return InNodePtr->first_attribute(pName) != NULL;
+    }
+
+    EXPORT_API bool AttributeBool(RapidXmlNative* InDocument, rapidxml::xml_node<>* InNodePtr, const char* pName)
+    {
+        assert(InDocument && InNodePtr && pName);
+
+        if (!InDocument || !InNodePtr || !pName)
         {
             return false;
         }
 
-        rapidxml::xml_node<>* ThisNode = (rapidxml::xml_node<>*)InNodePtr;
-
-        return ThisNode->first_attribute(pInName) != NULL;
-    }
-
-    EXPORT_API bool AttributeBool(void* InDocument, void* InNodePtr, const char* pInName)
-    {
-        assert(InDocument && InNodePtr && pInName && InDocument == GThisDocument);
-
-        if (!InDocument || !InNodePtr || !pInName || InDocument != GThisDocument)
-        {
-            return false;
-        }
-
-        rapidxml::xml_node<>* ThisNode = (rapidxml::xml_node<>*)InNodePtr;
-
-        rapidxml::xml_attribute<>* AttributeNode = ThisNode->first_attribute(pInName);
+        rapidxml::xml_attribute<>* AttributeNode = InNodePtr->first_attribute(pName);
 
         if (!AttributeNode)
         {
@@ -139,18 +97,16 @@ extern "C"
 #endif
     }
 
-    EXPORT_API int AttributeInt(void* InDocument, void* InNodePtr, const char* pInName)
+    EXPORT_API int AttributeInt(RapidXmlNative* InDocument, rapidxml::xml_node<>* InNodePtr, const char* pName)
     {
-        assert(InDocument && InNodePtr && pInName && InDocument == GThisDocument);
+        assert(InDocument && InNodePtr && pName);
 
-        if (!InDocument || !InNodePtr || !pInName || InDocument != GThisDocument)
+        if (!InDocument || !InNodePtr || !pName)
         {
             return 0;
         }
 
-        rapidxml::xml_node<>* ThisNode = (rapidxml::xml_node<>*)InNodePtr;
-
-        rapidxml::xml_attribute<>* AttributeNode = ThisNode->first_attribute(pInName);
+        rapidxml::xml_attribute<>* AttributeNode = InNodePtr->first_attribute(pName);
 
         if (!AttributeNode)
         {
@@ -164,18 +120,16 @@ extern "C"
         return atoi(Value);
     }
 
-    EXPORT_API unsigned AttributeUInt(void* InDocument, void* InNodePtr, const char* pInName)
+    EXPORT_API unsigned AttributeUInt(RapidXmlNative* InDocument, rapidxml::xml_node<>* InNodePtr, const char* pName)
     {
-        assert(InDocument && InNodePtr && pInName && InDocument == GThisDocument);
+        assert(InDocument && InNodePtr && pName);
 
-        if (!InDocument || !InNodePtr || !pInName || InDocument != GThisDocument)
+        if (!InDocument || !InNodePtr || !pName)
         {
             return 0;
         }
 
-        rapidxml::xml_node<>* ThisNode = (rapidxml::xml_node<>*)InNodePtr;
-
-        rapidxml::xml_attribute<>* AttributeNode = ThisNode->first_attribute(pInName);
+        rapidxml::xml_attribute<>* AttributeNode = InNodePtr->first_attribute(pName);
 
         if (!AttributeNode)
         {
@@ -186,21 +140,65 @@ extern "C"
 
         assert(Value != NULL);
 
-        return (unsigned)atoll(Value);
+        return strtoul(Value, NULL, 10);
     }
 
-    EXPORT_API float AttributeFloat(void* InDocument, void* InNodePtr, const char* pInName)
+    EXPORT_API long long AttributeInt64(RapidXmlNative* InDocument, rapidxml::xml_node<>* InNodePtr, const char* pName)
     {
-        assert(InDocument && InNodePtr && pInName && InDocument == GThisDocument);
+        assert(InDocument && InNodePtr && pName);
 
-        if (!InDocument || !InNodePtr || !pInName || InDocument != GThisDocument)
+        if (!InDocument || !InNodePtr || !pName)
         {
             return 0;
         }
 
-        rapidxml::xml_node<>* ThisNode = (rapidxml::xml_node<>*)InNodePtr;
+        rapidxml::xml_attribute<>* AttributeNode = InNodePtr->first_attribute(pName);
 
-        rapidxml::xml_attribute<>* AttributeNode = ThisNode->first_attribute(pInName);
+        if (!AttributeNode)
+        {
+            return 0;
+        }
+
+        char* Value = AttributeNode->value();
+
+        assert(Value != NULL);
+
+        return atoll(Value);
+    }
+
+    EXPORT_API unsigned long long AttributeUInt64(RapidXmlNative* InDocument, rapidxml::xml_node<>* InNodePtr, const char* pName)
+    {
+        assert(InDocument && InNodePtr && pName);
+
+        if (!InDocument || !InNodePtr || !pName)
+        {
+            return 0;
+        }
+
+        rapidxml::xml_attribute<>* AttributeNode = InNodePtr->first_attribute(pName);
+
+        if (!AttributeNode)
+        {
+            return 0;
+        }
+
+        char* Value = AttributeNode->value();
+
+        assert(Value != NULL);
+
+        return strtoull(Value, NULL, 10);
+    }
+
+    EXPORT_API float AttributeFloat(RapidXmlNative* InDocument, rapidxml::xml_node<>* InNodePtr, const char* pName)
+    {
+        assert(InDocument && InNodePtr && pName);
+
+        if (!InDocument || !InNodePtr || !pName)
+        {
+            return 0;
+        }
+
+        rapidxml::xml_attribute<>* AttributeNode = InNodePtr->first_attribute(pName);
 
         if (!AttributeNode)
         {
@@ -214,18 +212,39 @@ extern "C"
         return (float)atof(Value);
     }
 
-    EXPORT_API void* AttributeStringPtr(void* InDocument, void* InNodePtr, const char* pInName)
+    EXPORT_API double AttributeDouble(RapidXmlNative* InDocument, rapidxml::xml_node<>* InNodePtr, const char* pName)
     {
-        assert(InDocument && InNodePtr && pInName && InDocument == GThisDocument);
+        assert(InDocument && InNodePtr && pName);
 
-        if (!InDocument || !InNodePtr || !pInName || InDocument != GThisDocument)
+        if (!InDocument || !InNodePtr || !pName)
+        {
+            return 0;
+        }
+
+        rapidxml::xml_attribute<>* AttributeNode = InNodePtr->first_attribute(pName);
+
+        if (!AttributeNode)
+        {
+            return 0;
+        }
+
+        char* Value = AttributeNode->value();
+
+        assert(Value != NULL);
+
+        return atof(Value);
+    }
+
+    EXPORT_API void* AttributeStringPtr(RapidXmlNative* InDocument, rapidxml::xml_node<>* InNodePtr, const char* pName)
+    {
+        assert(InDocument && InNodePtr && pName);
+
+        if (!InDocument || !InNodePtr || !pName)
         {
             return NULL;
         }
 
-        rapidxml::xml_node<>* ThisNode = (rapidxml::xml_node<>*)InNodePtr;
-
-        rapidxml::xml_attribute<>* AttributeNode = ThisNode->first_attribute(pInName);
+        rapidxml::xml_attribute<>* AttributeNode = InNodePtr->first_attribute(pName);
 
         if (!AttributeNode)
         {
@@ -239,59 +258,86 @@ extern "C"
         return Value;
     }
 
-    EXPORT_API void* FirstChildNodePtr(void* InDocument, void* InNodePtr)
+    EXPORT_API void* FirstNodePtr(RapidXmlNative* InDocument, rapidxml::xml_node<>* InNodePtr, const char* pName)
     {
-        assert(InDocument && InNodePtr && InDocument == GThisDocument);
+        assert(InDocument);
 
-        if (!InDocument || !InNodePtr || InDocument != GThisDocument)
+        if (!InDocument)
         {
             return NULL;
         }
 
-        rapidxml::xml_node<>* ThisNode = (rapidxml::xml_node<>*)InNodePtr;
+        if (InNodePtr != NULL)
+        {
+            if (pName != NULL && pName[0] != 0)
+            {
+                return InNodePtr->first_node(pName);
+            }
+            else
+            {
+                return InNodePtr->first_node();
+            }            
+        }
+        else
+        {
+            RapidXmlNative* Native = (RapidXmlNative*)InDocument;
 
-        return ThisNode->first_node();
+            rapidxml::xml_document<>* Document = Native->GetDocument();
+
+            assert(Document);
+
+            if (pName != NULL && pName[0] != 0)
+            {
+                return Document->first_node(pName);
+            }
+            else
+            {
+                return Document->first_node();
+            }
+        }
     }
 
-    EXPORT_API void* NextSiblingPtr(void* InDocument, void* InNodePtr)
+    EXPORT_API void* NextSiblingPtr(RapidXmlNative* InDocument, rapidxml::xml_node<>* InNodePtr, const char* pName)
     {
-        assert(InDocument && InNodePtr && InDocument == GThisDocument);
+        assert(InDocument && InNodePtr);
 
-        if (!InDocument || !InNodePtr || InDocument != GThisDocument)
+        if (!InDocument || !InNodePtr)
         {
             return NULL;
         }
-
-        rapidxml::xml_node<>* ThisNode = (rapidxml::xml_node<>*)InNodePtr;
-
-        return ThisNode->next_sibling();
+        
+        if (pName != NULL && pName[0] != 0)
+        {
+            return InNodePtr->next_sibling(pName);
+        }
+        else
+        {
+            return InNodePtr->next_sibling();
+        }        
     }
 
-    EXPORT_API void* NodeTagPtr(void* InDocument, void* InNodePtr)
+    EXPORT_API void* GetNodeTagPtr(RapidXmlNative* InDocument, rapidxml::xml_node<>* InNodePtr)
     {
-        assert(InDocument && InNodePtr && InDocument == GThisDocument);
+        assert(InDocument && InNodePtr);
 
-        if (!InDocument || !InNodePtr || InDocument != GThisDocument)
+        if (!InDocument || !InNodePtr)
         {
             return NULL;
         }
-
-        rapidxml::xml_node<>* ThisNode = (rapidxml::xml_node<>*)InNodePtr;
-
-        return ThisNode->name();
+        
+        return InNodePtr->name();
     }
 
-    EXPORT_API int GetChildCount(void* InDocument, void* InNodePtr)
+    EXPORT_API int GetChildNodeCount(RapidXmlNative* InDocument, rapidxml::xml_node<>* InNodePtr)
     {
-        assert(InDocument && InNodePtr && InDocument == GThisDocument);
+        assert(InDocument && InNodePtr);
 
-        if (!InDocument || !InNodePtr || InDocument != GThisDocument)
+        if (!InDocument || !InNodePtr)
         {
             return NULL;
         }
 
-        rapidxml::xml_node<>* ThisNode = (rapidxml::xml_node<>*)InNodePtr;
-        rapidxml::xml_node<>* Child = ThisNode->first_node();
+        rapidxml::xml_node<>* Child = InNodePtr->first_node();
 
         int Result = 0;
 
@@ -302,7 +348,131 @@ extern "C"
             Child = Child->next_sibling();
         }
 
+        return Result;        
+    }
+
+    EXPORT_API int GetAttributeCount(RapidXmlNative* InDocument, rapidxml::xml_node<>* InNodePtr)
+    {
+        assert(InDocument && InNodePtr);
+
+        if (!InDocument || !InNodePtr)
+        {
+            return NULL;
+        }
+
+        rapidxml::xml_attribute<>* Attr = InNodePtr->first_attribute();
+
+        int Result = 0;
+
+        while (Attr)
+        {
+            ++Result;
+
+            Attr = Attr->next_attribute();
+        }
+
         return Result;
-        
+    }
+
+    EXPORT_API void* GetAttributeNamePtr(RapidXmlNative* InDocument, rapidxml::xml_attribute<>* InAttrPtr)
+    {
+        assert(InDocument && InAttrPtr && InAttrPtr->document() == InDocument->GetDocument());
+
+        return InAttrPtr->name();
+    }
+
+    EXPORT_API void* GetAttributeValuePtr(RapidXmlNative* InDocument, rapidxml::xml_attribute<>* InAttrPtr)
+    {
+        assert(InDocument && InAttrPtr && InAttrPtr->document() == InDocument->GetDocument());
+
+        return InAttrPtr->value();
+    }
+
+    EXPORT_API bool GetAttributeValueBool(RapidXmlNative* InDocument, rapidxml::xml_attribute<>* InAttrPtr)
+    {
+        assert(InDocument && InAttrPtr && InAttrPtr->document() == InDocument->GetDocument());
+
+        if (!InAttrPtr->value())
+        {
+            return false;
+        }
+                
+#ifdef _MSC_VER
+        return _stricmp(InAttrPtr->value(), "true") == 0;
+#else
+        return stricmp(InAttrPtr->value(), "true") == 0;
+#endif
+    }
+
+    EXPORT_API int GetAttributeValueInt(RapidXmlNative* InDocument, rapidxml::xml_attribute<>* InAttrPtr)
+    {
+        assert(InDocument && InAttrPtr && InAttrPtr->document() == InDocument->GetDocument());
+
+        if (!InAttrPtr->value())
+        {
+            return 0;
+        }
+
+        return atoi(InAttrPtr->value());
+    }
+
+    EXPORT_API unsigned GetAttributeValueUInt(RapidXmlNative* InDocument, rapidxml::xml_attribute<>* InAttrPtr)
+    {
+        assert(InDocument && InAttrPtr && InAttrPtr->document() == InDocument->GetDocument());
+
+        if (!InAttrPtr->value())
+        {
+            return 0;
+        }
+
+        return strtoul(InAttrPtr->value(), NULL, 10);
+    }
+
+    EXPORT_API long long GetAttributeValueInt64(RapidXmlNative* InDocument, rapidxml::xml_attribute<>* InAttrPtr)
+    {
+        assert(InDocument && InAttrPtr && InAttrPtr->document() == InDocument->GetDocument());
+
+        if (!InAttrPtr->value())
+        {
+            return 0;
+        }
+
+        return atoll(InAttrPtr->value());
+    }
+
+    EXPORT_API unsigned long long GetAttributeValueUInt64(RapidXmlNative* InDocument, rapidxml::xml_attribute<>* InAttrPtr)
+    {
+        assert(InDocument && InAttrPtr && InAttrPtr->document() == InDocument->GetDocument());
+
+        if (!InAttrPtr->value())
+        {
+            return 0;
+        }
+
+        return strtoull(InAttrPtr->value(), NULL, 10);
+    }
+
+    EXPORT_API float GetAttributeValueFloat(RapidXmlNative* InDocument, rapidxml::xml_attribute<>* InAttrPtr)
+    {
+        assert(InDocument && InAttrPtr && InAttrPtr->document() == InDocument->GetDocument());
+
+        if (!InAttrPtr->value())
+        {
+            return 0;
+        }
+
+        return (float)atof(InAttrPtr->value());
+    }
+
+    EXPORT_API double GetAttributeValueDouble(RapidXmlNative* InDocument, rapidxml::xml_attribute<>* InAttrPtr)
+    {
+        assert(InDocument && InAttrPtr && InAttrPtr->document() == InDocument->GetDocument());
+
+        if (!InAttrPtr->value())
+        {
+            return 0;
+        }
+
+        return atof(InAttrPtr->value());
     }
 }

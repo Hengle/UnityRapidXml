@@ -27,6 +27,9 @@
     <ClInclude Include="Source\rapidxml_iterators.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="Source\RapidXmlNative.h">
+      <Filter>源文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\RapidXml.cpp">
